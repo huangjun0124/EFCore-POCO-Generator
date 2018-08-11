@@ -16,7 +16,7 @@ namespace GeneratePOCO
         // Settings.ProviderName = "System.Data.SqlClient";
 
         // Main settings
-        public static string ConnectionStringName = "HangfireDbContext";
+        public static string ConnectionStringName = "HangfireReadOnly";
         public static string ConnectionString; //= ConfigurationManager.ConnectionStrings["HangfireDbContext"].ConnectionString;
         public static string ProviderName; //= ConfigurationManager.ConnectionStrings["HangfireDbContext"].ProviderName;
 
@@ -25,7 +25,7 @@ namespace GeneratePOCO
 
 
         public static int CommandTimeout = 600;
-        public static bool IncludeViews;
+        public static bool IncludeViews = true;
         public static bool IncludeSynonyms;
         public static bool IncludeStoredProcedures;
         public static bool IncludeTableValuedFunctions;
@@ -106,7 +106,6 @@ namespace GeneratePOCO
         public static Regex TableFilterInclude;
         public static Regex StoredProcedureFilterExclude;
         public static Regex StoredProcedureFilterInclude;
-        public static Func<Table, bool> TableFilter;
         public static Func<StoredProcedure, bool> StoredProcedureFilter = (StoredProcedure sp) =>
         {
             // Example: Exclude any stored procedure in dbo schema with "order" in its name.
@@ -220,7 +219,19 @@ namespace GeneratePOCO
 
             return foreignKey;
         };
-        public static Func<Table, Table, string, string[]> ForeignKeyAnnotationsProcessing;
+        public static Func<Table, Table, string, string[]> ForeignKeyAnnotationsProcessing = (Table fkTable, Table pkTable, string propName) =>
+        {
+            /* Example:
+            // Each navigation property that is a reference to User are left intact
+            if (pkTable.NameHumanCase.Equals("User") && propName.Equals("User"))
+                return null;
+
+            // all the others are marked with this attribute
+            return new[] { "System.Runtime.Serialization.IgnoreDataMember" };
+            */
+
+            return null;
+        };
         public static Func<ForeignKey, ForeignKey> ForeignKeyFilter = (ForeignKey fk) =>
         {
             // Return null to exclude this foreign key, or set IncludeReverseNavigation = false
@@ -378,6 +389,8 @@ namespace GeneratePOCO
         };
         public static bool IncludeCodeGeneratedAttribute;
         public static Tables Tables;
+        public static HashSet<string> TableNameHashSet;
+
         public static List<StoredProcedure> StoredProcs;
 
         public static Elements ElementsToGenerate= Elements.Poco | Elements.Context | Elements.UnitOfWork | Elements.PocoConfiguration;

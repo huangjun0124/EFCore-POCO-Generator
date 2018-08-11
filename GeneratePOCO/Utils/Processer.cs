@@ -15,11 +15,25 @@ namespace GeneratePOCO
     class Processer : GeneratedTextTransformation
     {
 
-        public void Process()
+        public void LoadAllTablesToSetting()
         {
             // Read schema
             var factory = GetDbProviderFactory();
             Settings.Tables = LoadTables(factory);
+            Settings.TableNameHashSet = new HashSet<string>();
+            foreach (var table in Settings.Tables)
+            {
+                if (!Settings.TableNameHashSet.Contains(table.Name))
+                {
+                    Settings.TableNameHashSet.Add(table.Name);
+                }
+            }
+        }
+
+        public void LoadAllProcedures()
+        {
+            // Read schema
+            var factory = GetDbProviderFactory();
             Settings.StoredProcs = LoadStoredProcs(factory);
 
             // Generate output
@@ -27,11 +41,6 @@ namespace GeneratePOCO
             {
             }
         }
-
-        
-        
-
-        
 
         public static readonly Func<string, string> ToDisplayName = (str) =>
         {
@@ -162,8 +171,6 @@ namespace GeneratePOCO
 
         private DbProviderFactory GetDbProviderFactory()
         {
-            Utils.InitConnectionString();
-
             if (!string.IsNullOrEmpty(Settings.ProviderName))
             {
                 try

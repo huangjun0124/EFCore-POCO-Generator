@@ -1157,10 +1157,6 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                             {
                                 table.NameHumanCase += "1";
                             }
-
-                            if (!Settings.TableFilter(table))
-                                continue;
-
                             result.Add(table);
                         }
                     }

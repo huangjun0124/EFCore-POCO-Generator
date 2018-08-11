@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.27428.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneratePOCO", "GeneratePOCO\GeneratePOCO.csproj", "{75A7A30A-F4C0-4DBB-8FD6-6CB534122BB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCoreDbTest", "NetCoreDbTest\NetCoreDbTest.csproj", "{1694D905-0386-4EEF-A416-86DCD8494955}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "POCOGeneOrgTest", "POCOGeneOrgTest\POCOGeneOrgTest.csproj", "{80E8E6A3-235A-4EC8-B091-2E03A39A55F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{75A7A30A-F4C0-4DBB-8FD6-6CB534122BB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75A7A30A-F4C0-4DBB-8FD6-6CB534122BB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75A7A30A-F4C0-4DBB-8FD6-6CB534122BB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1694D905-0386-4EEF-A416-86DCD8494955}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1694D905-0386-4EEF-A416-86DCD8494955}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1694D905-0386-4EEF-A416-86DCD8494955}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1694D905-0386-4EEF-A416-86DCD8494955}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80E8E6A3-235A-4EC8-B091-2E03A39A55F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80E8E6A3-235A-4EC8-B091-2E03A39A55F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80E8E6A3-235A-4EC8-B091-2E03A39A55F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80E8E6A3-235A-4EC8-B091-2E03A39A55F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

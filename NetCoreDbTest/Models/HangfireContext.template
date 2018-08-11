@@ -1,0 +1,19 @@
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace NetCoreDbTest
+{
+    public class HangfireContext : DbContext
+    {
+        {0}
+
+        public HangfireContext(DbContextOptions<HangfireContext> options)
+            : base(options)
+        { }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            {1}
+        }
+    }
+}
