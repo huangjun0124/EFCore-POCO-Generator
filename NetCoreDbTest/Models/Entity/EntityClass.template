@@ -2,10 +2,10 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NetCoreDbTest.Entity
-{
-    {0}
+{{
+{0}
     public class {1}
-    {
-       {2}
-    }
-}
+    {{
+{2}
+    }}
+}}

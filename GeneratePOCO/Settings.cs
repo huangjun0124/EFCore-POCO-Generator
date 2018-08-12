@@ -30,11 +30,6 @@ namespace GeneratePOCO
         public static string POCOClassTemplateFile = @"..\..\..\NetCoreDbTest\Models\Entity\EntityClass.template";
 
         /// <summary>
-        /// 生成的 POCO 实体类的模板文件地址
-        /// </summary>
-        public static string POCOClassProjectFile = @"..\..\..\NetCoreDbTest\NetCoreDbTest.csproj";
-
-        /// <summary>
         ///  生成 DbContext 类的模板文件地址-- net core does not need to update this when adding files to project
         /// </summary>
         public static string DbContextTemplateFile= @"..\..\..\NetCoreDbTest\Models\HangfireContext.template";

@@ -1781,7 +1781,8 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                 ParentTable = table
             };
 
-            if (col.PropertyType == "string")
+            if (col.SqlPropertyType != "xml" && col.SqlPropertyType != "text" && col.SqlPropertyType != "ntext" && col.SqlPropertyType != "image"
+                && (col.PropertyType == "string" || col.PropertyType == "byte[]"))
             {
                 if (col.MaxLength == -1)
                 {

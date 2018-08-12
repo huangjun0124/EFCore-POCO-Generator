@@ -126,8 +126,7 @@ namespace GeneratePOCO
 
         private string WrapIfNullable(string propType, Column col)
         {
-            
-            if (!col.IsNullable)
+            if (!col.IsNullable || propType=="string" || propType=="byte[]")
                 return propType;
             return string.Format(Settings.NullableShortHand ? "{0}?" : "System.Nullable<{0}>", propType);
         }

@@ -15,7 +15,7 @@ using GeneratePOCO.Utils;
 
 namespace GeneratePOCO
 {
-    public partial class Form1 : Form, IOutput
+    public partial class FormMain : Form, IOutput
     {
         private const string COL_TABLENAME = "TableName";
         private const string COL_TYPE = "Type";
@@ -26,7 +26,7 @@ namespace GeneratePOCO
         private const string COL_IsMapping = "IsMapping";
         private const string COL_IsView = "IsView";
 
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
         }
@@ -126,7 +126,7 @@ namespace GeneratePOCO
         {
             if (txtMessage.InvokeRequired)
             {
-                txtMessage.Invoke(new MethodInvoker(() => { Log(message, isWarn); }));
+                txtMessage.BeginInvoke(new MethodInvoker(() => { Log(message, isWarn); }));
             }
             else
             {
@@ -143,13 +143,15 @@ namespace GeneratePOCO
                 {
                     txtMessage.SelectionColor = Color.Green;
                 }
+                txtMessage.ScrollToCaret();
             }
         }
 
         private void btnGenerate_Click(object sender, EventArgs e)
         {
-            ClassOutputGenerater generater = new ClassOutputGenerater();
+            ClassOutputGenerater generater = new ClassOutputGenerater(this);
             generater.WriteToFiles();
+            MessageBox.Show("Generate Context and Model class success!", "POCO");
         }
 
         
