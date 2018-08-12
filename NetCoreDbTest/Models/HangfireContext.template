@@ -1,10 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NetCoreDbTest.Entity;
 
 namespace NetCoreDbTest
 {
     public class HangfireContext : DbContext
     {
+		#region DbSet fields definition
         {0}
+		#endregion
 
         public HangfireContext(DbContextOptions<HangfireContext> options)
             : base(options)
@@ -13,7 +16,9 @@ namespace NetCoreDbTest
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+			#region Entity HasKey Mapping
             {1}
+			#endregion
         }
     }
 }

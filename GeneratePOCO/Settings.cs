@@ -15,120 +15,130 @@ namespace GeneratePOCO
         // Settings.ConnectionString = "Data Source=(local);Initial Catalog=Northwind;Integrated Security=True;Application Name=EntityFramework Reverse POCO Generator";
         // Settings.ProviderName = "System.Data.SqlClient";
 
-        // Main settings
+        // Database settings
         public static string ConnectionStringName = "HangfireReadOnly";
         public static string ConnectionString; //= ConfigurationManager.ConnectionStrings["HangfireDbContext"].ConnectionString;
         public static string ProviderName; //= ConfigurationManager.ConnectionStrings["HangfireDbContext"].ProviderName;
-
-        public static string Namespace = "";
-        public static string DbContextName = "";
-
-
         public static int CommandTimeout = 600;
-        public static bool IncludeViews = true;
-        public static bool IncludeSynonyms;
         public static bool IncludeStoredProcedures;
-        public static bool IncludeTableValuedFunctions;
-        public static bool AddIDbContextFactory;
-        public static bool AddUnitTestingDbContext;
 
-        private static string _dbContextInterfaceName;
-        public static string DbContextInterfaceName
-        {
-            get { return _dbContextInterfaceName ?? ("I" + DbContextName); }
-            set { _dbContextInterfaceName = value; }
-        }
+        #region Generate Dbcontext and POCO settings
 
         /// <summary>
-        /// Specify what the base classes are for your database context interface
+        /// 生成的 POCO 实体类的模板文件地址
         /// </summary>
-        public static string DbContextInterfaceBaseClasses = "System.IDisposable";
-        /// <summary>
-        /// Specify what the base class is for your DbContext. For ASP.NET Identity use "IdentityDbContext<ApplicationUser>"
-        /// </summary>
-        public static string DbContextBaseClass = "System.Data.Entity.DbContext";
-        /// <summary>
-        /// If true, then DbContext will have a default (parameterless) constructor which automatically passes in the connection string name, if false then no parameterless constructor will be created.
-        /// </summary>
-        public static bool AddParameterlessConstructorToDbContext = true;
-        /// <summary>
-        /// //defaults to "Name=" + ConnectionStringName
-        /// </summary>
-        private static string _defaultConstructorArgument;
-        public static string DefaultConstructorArgument
-        {
-            get { return _defaultConstructorArgument ?? string.Format('"' + "Name={0}" + '"', ConnectionStringName); }
-            set { _defaultConstructorArgument = value; }
-        }
+        public static string POCOClassTemplateFile = @"..\..\..\NetCoreDbTest\Models\Entity\EntityClass.template";
 
-        public static string ConfigurationClassName = "Configuration";
+        /// <summary>
+        /// 生成的 POCO 实体类的模板文件地址
+        /// </summary>
+        public static string POCOClassProjectFile = @"..\..\..\NetCoreDbTest\NetCoreDbTest.csproj";
+
+        /// <summary>
+        ///  生成 DbContext 类的模板文件地址-- net core does not need to update this when adding files to project
+        /// </summary>
+        public static string DbContextTemplateFile= @"..\..\..\NetCoreDbTest\Models\HangfireContext.template";
+
         public static string CollectionInterfaceType = "System.Collections.Generic.ICollection";
         public static string CollectionType = "System.Collections.Generic.List";
-        public static bool NullableShortHand;
-        public static bool UseDataAnnotations;
-        public static bool UseDataAnnotationsWithFluent;
-        public static string EntityClassesModifiers = "public partial";
-        public static string ConfigurationClassesModifiers = "internal";
-        public static string DbContextClassModifiers = "public partial";
-        public static string DbContextInterfaceModifiers = "public partial";
-        public static string MigrationClassModifiers = "internal sealed";
-        public static string ResultClassModifiers = "public partial";
-        public static bool DbContextClassIsPartial()
-        {
-            return DbContextClassModifiers != null && DbContextClassModifiers.Contains("partial");
-        }
 
+        /// <summary>
+        /// 可空类型用 ? 而不是 Nullable<T> 修饰
+        /// </summary>
+        public static bool NullableShortHand = true;
+
+        /// <summary>
+        /// If true, will add data annotations to the poco classes.
+        /// </summary>
+        public static bool UseDataAnnotations = true;
+
+        /// <summary>
+        /// If true, then non-Entity Framework-specific DataAnnotations (like [Required] and [StringLength]) will be applied to Entities even if UseDataAnnotations is false.
+        /// </summary>
+        public static bool UseDataAnnotationsWithFluent = true;
+
+        public static string EntityClassesModifiers = "public partial";
+        public static string ResultClassModifiers = "public partial";
         public static bool EntityClassesArePartial()
         {
             return EntityClassesModifiers != null && EntityClassesModifiers.Contains("partial");
         }
 
-        public static bool ConfigurationClassesArePartial()
-        {
-            return ConfigurationClassesModifiers != null && ConfigurationClassesModifiers.Contains("partial");
-        }
-        public static bool GenerateSeparateFiles;
-        public static bool UseMappingTables;
-        public static bool UsePropertyInitializers;
-        public static bool IsSqlCe;
-        public static string FileExtension = ".cs";
-        public static bool UsePascalCase;
-        public static bool UsePrivateSetterForComputedColumns;
-        public static CommentsStyle IncludeComments = CommentsStyle.AtEndOfField;
-        public static bool IncludeQueryTraceOn9481Flag;
+        #endregion
+
+        #region runtime variables
+        /// <summary>
+        /// 所有的表和视图
+        /// </summary>
+        public static Tables Tables;
+
+        /// <summary>
+        /// 表和视图名的 HashSet
+        /// </summary>
+        public static HashSet<string> TableNameHashSet;
+
+        /// <summary>
+        /// 所有的存储过程
+        /// </summary>
+        public static List<StoredProcedure> StoredProcs;
+
+        #endregion
+        /// <summary>
+        /// Removes POCO constructor and instead uses C# 6 property initialisers to set defaults
+        /// </summary>
+        public static bool UsePropertyInitializers = true;
+
+        /// <summary>
+        /// This will rename the generated C# tables & properties to use PascalCase. If false table & property names will be left alone.
+        /// </summary>
+        public static bool UsePascalCase = true;
+
+        /// <summary>
+        /// If the columns is computed, use a private setter.
+        /// </summary>
+        public static bool UsePrivateSetterForComputedColumns = true;
+
+        public static CommentsStyle IncludeComments = CommentsStyle.InSummaryBlock;
+
         public static CommentsStyle IncludeExtendedPropertyComments = CommentsStyle.InSummaryBlock;
-        public static bool DisableGeographyTypes;
-        public static bool PrependSchemaName;
-        public static string TableSuffix;
-        public static Regex SchemaFilterExclude;
-        public static Regex SchemaFilterInclude;
-        public static Regex TableFilterExclude;
-        public static Regex TableFilterInclude;
-        public static Regex StoredProcedureFilterExclude;
-        public static Regex StoredProcedureFilterInclude;
-        public static Func<StoredProcedure, bool> StoredProcedureFilter = (StoredProcedure sp) =>
-        {
-            // Example: Exclude any stored procedure in dbo schema with "order" in its name.
-            //if(sp.Schema.Equals("dbo", StringComparison.InvariantCultureIgnoreCase) && sp.NameHumanCase.ToLowerInvariant().Contains("order"))
-            //    return false;
 
-            return true;
-        };
+        /// <summary>
+        /// Turns off use of System.Data.Entity.Spatial.DbGeography and System.Data.Entity.Spatial.DbGeometry as OData doesn't support entities with geometry/geography types.
+        /// </summary>
+        public static bool DisableGeographyTypes = true;
 
-        public static Func<Table, bool> ConfigurationFilter = (Table t) =>
-        {
-            return true;
-        };
+        /// <summary>
+        /// Control if the schema name is prepended to the table name
+        /// If there are multiple schemas, then the table name is prefixed with the schema, except for dbo.
+        /// Ie. dbo.hello will be Hello.
+        ///    abc.hello will be AbcHello.
+        /// this will affect both filename and classname
+        /// </summary>
+        public static bool PrependSchemaName = false;
 
-        public static Dictionary<string, string> StoredProcedureReturnTypes = new Dictionary<string, string>();
-        public static Regex ColumnFilterExclude;
-        public static bool UseLazyLoading;
-        public static string[] FilenameSearchOrder;
-        public static string[] AdditionalNamespaces;
-        public static string[] AdditionalContextInterfaceItems;
-        public static string[] AdditionalReverseNavigationsDataAnnotations;
-        public static string[] AdditionalForeignKeysDataAnnotations;
-        public static string ConfigFilePath;
+        public static bool IncludeTableValuedFunctions = false;
+
+        /// <summary>
+        /// POCO 类属性是否添加 MaxLength
+        /// </summary>
+        public static bool IsColumnAddMaxLentghAnnotation = false;
+
+        /// <summary>
+        /// If true, mapping will be used and no mapping tables will be generated. If false, all tables will be generated.
+        /// 用于外键生成引用
+        /// </summary>
+        public static bool UseMappingTables = false;
+
+        /// <summary>
+        /// Prepends the suffix to the generated classes names
+        /// </summary>
+        public static string TableSuffix = null;
+
+        /// <summary>
+        /// Marks all navigation properties as virtual or not, to support or disable EF Lazy Loading feature
+        /// </summary>
+        public static bool UseLazyLoading = true;
+
         public static Func<string, string, bool, string> TableRename = (string name, string schema, bool isView) =>
         {
             // Example
@@ -152,6 +162,7 @@ namespace GeneratePOCO
 
             return name;
         };
+
         public static Func<StoredProcedure, string> StoredProcedureRename = (sp) => sp.NameHumanCase;   // Do nothing by default
 
         // Use the following function to rename the return model automatically generated for stored procedure.
@@ -166,7 +177,15 @@ namespace GeneratePOCO
 
             return name;
         };*/
-        public static Func<string, StoredProcedure, string> StoredProcedureReturnModelRename = (name, sp) => name; // Do nothing by default
+
+
+        // Column modification*****************************************************************************************************************
+        // Use the following list to replace column byte types with Enums.
+        // As long as the type can be mapped to your new type, all is well.
+        //Settings.EnumDefinitions.Add(new EnumDefinition { Schema = "dbo", Table = "match_table_name", Column = "match_column_name", EnumType = "name_of_enum" });
+        //Settings.EnumDefinitions.Add(new EnumDefinition { Schema = "dbo", Table = "OrderHeader", Column = "OrderStatus", EnumType = "OrderStatusType" }); // This will replace OrderHeader.OrderStatus type to be an OrderStatusType enum
+        public static List<EnumDefinition> EnumDefinitions = new List<EnumDefinition>();
+
         public static Func<Column, Table, Column> UpdateColumn = (Column column, Table table) =>
         {
             // Rename column
@@ -209,6 +228,8 @@ namespace GeneratePOCO
 
             return column;
         };
+
+        #region ForeignKey Processing
         public static Func<IList<ForeignKey>, Table, Table, bool, ForeignKey> ForeignKeyProcessing = (foreignKeys, fkTable, pkTable, anyNullableColumnInForeignKey) =>
         {
             var foreignKey = foreignKeys.First();
@@ -219,6 +240,7 @@ namespace GeneratePOCO
 
             return foreignKey;
         };
+
         public static Func<Table, Table, string, string[]> ForeignKeyAnnotationsProcessing = (Table fkTable, Table pkTable, string propName) =>
         {
             /* Example:
@@ -232,6 +254,7 @@ namespace GeneratePOCO
 
             return null;
         };
+
         public static Func<ForeignKey, ForeignKey> ForeignKeyFilter = (ForeignKey fk) =>
         {
             // Return null to exclude this foreign key, or set IncludeReverseNavigation = false
@@ -249,6 +272,7 @@ namespace GeneratePOCO
 
             return fk;
         };
+
         public static Func<string, ForeignKey, string, Relationship, short, string> ForeignKeyName = (tableName, foreignKey, foreignKeyName, relationship, attempt) =>
         {
             string fkName;
@@ -344,12 +368,9 @@ namespace GeneratePOCO
             //AddRelationship( foreignKeys, tablesAndViews, "orderDetails_to_invoices", "dbo", "Order Details", new[] { "OrderID", "ProductID" }, "dbo", "Invoices",  new[] { "OrderID", "ProductID" } );
             //AddRelationship( foreignKeys, tablesAndViews, "orders_to_ordersQry"     , "dbo", "Orders"       , "OrderID"                       , "dbo", "Orders Qry", "OrderID" );
         };
-        public static string MigrationConfigurationFileName;
-        public static string MigrationStrategy = "MigrateDatabaseToLatestVersion";
-        public static string ContextKey;
-        public static bool AutomaticMigrationsEnabled;
-        public static bool AutomaticMigrationDataLossAllowed;
-        public static List<EnumDefinition> EnumDefinitions = new List<EnumDefinition>();
+
+        #endregion
+
         public static Dictionary<string, string> ColumnNameToDataAnnotation= new Dictionary<string, string>
         {
             // This is used when UseDataAnnotations == true or UseDataAnnotationsWithFluent == true;
@@ -374,6 +395,7 @@ namespace GeneratePOCO
             { "zip",             "DataType(DataType.PostalCode)" },
             { "zipcode",         "DataType(DataType.PostalCode)" }
         };
+
         public static Dictionary<string, string> ColumnTypeToDataAnnotation = new Dictionary<string, string>
         {
             // This is used when UseDataAnnotations == true or UseDataAnnotationsWithFluent == true;
@@ -387,22 +409,7 @@ namespace GeneratePOCO
             { "smallmoney",      "DataType(DataType.Currency)" },
             { "money",           "DataType(DataType.Currency)" }
         };
-        public static bool IncludeCodeGeneratedAttribute;
-        public static Tables Tables;
-        public static HashSet<string> TableNameHashSet;
 
-        public static List<StoredProcedure> StoredProcs;
-
-        public static Elements ElementsToGenerate= Elements.Poco | Elements.Context | Elements.UnitOfWork | Elements.PocoConfiguration;
-
-        public static string PocoNamespace, ContextNamespace, UnitOfWorkNamespace, PocoConfigurationNamespace;
-
-        public static float TargetFrameworkVersion;
-        public static Func<string, bool> IsSupportedFrameworkVersion = (string frameworkVersion) =>
-        {
-            var nfi = CultureInfo.InvariantCulture.NumberFormat;
-            var isSupported = float.Parse(frameworkVersion, nfi);
-            return isSupported <= TargetFrameworkVersion;
-        };
+        public static Elements ElementsToGenerate = Elements.Poco | Elements.Context;
     };
 }

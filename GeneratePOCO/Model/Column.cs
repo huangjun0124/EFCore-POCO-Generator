@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GeneratePOCO
 {
-    [DebuggerDisplay("Name={Name} DisplayName={DisplayName} SqlPropertyType={SqlPropertyType} PropertyType={PropertyType} MaxLength={MaxLength}")]
+    [DebuggerDisplay("Name={Name} ClassName={NameHumanCase} SqlPropertyType={SqlPropertyType} PropertyType={PropertyType} MaxLength={MaxLength}")]
     public class Column
     {
         /// <summary>
@@ -18,10 +18,7 @@ namespace GeneratePOCO
         /// Name adjusted for C# output
         /// </summary>
         public string NameHumanCase;
-        /// <summary>
-        /// Name used in the data annotation [Display(Name = "<DisplayName> goes here")]
-        /// </summary>
-        public string DisplayName;
+
         /// <summary>
         /// Adds 'override' to the property declaration
         /// </summary>
@@ -31,7 +28,13 @@ namespace GeneratePOCO
         public string Default;
         public int MaxLength;
         public int Precision;
+        /// <summary>
+        /// 字段在 SQL 中的类型
+        /// </summary>
         public string SqlPropertyType;
+        /// <summary>
+        /// 字段对应的 C# 类型
+        /// </summary>
         public string PropertyType;
         public int Scale;
         public int Ordinal;
@@ -132,54 +135,25 @@ namespace GeneratePOCO
         private void SetupConfig()
         {
             DataAnnotations = new List<string>();
-            string databaseGeneratedOption = null;
-            var schemaReference = Settings.UseDataAnnotations
-                ? string.Empty
-                : "System.ComponentModel.DataAnnotations.Schema.";
-
-            bool isNewSequentialId = !string.IsNullOrEmpty(Default) && Default.ToLower().Contains("newsequentialid");
-            bool isTemporalColumn = this.GeneratedAlwaysType != ColumnGeneratedAlwaysType.NotApplicable;
-
-            if (IsIdentity || isNewSequentialId || isTemporalColumn) // Identity, instead of Computed, seems the best for Temporal `GENERATED ALWAYS` columns: https://stackoverflow.com/questions/40742142/entity-framework-not-working-with-temporal-table
-            {
-                if (Settings.UseDataAnnotations || isNewSequentialId)
-                    DataAnnotations.Add("DatabaseGenerated(DatabaseGeneratedOption.Identity)");
-                else
-                    databaseGeneratedOption = string.Format(".HasDatabaseGeneratedOption({0}DatabaseGeneratedOption.Identity)", schemaReference);
-            }
-            else if (IsComputed)
-            {
-                if (Settings.UseDataAnnotations)
-                    DataAnnotations.Add("DatabaseGenerated(DatabaseGeneratedOption.Computed)");
-                else
-                    databaseGeneratedOption = string.Format(".HasDatabaseGeneratedOption({0}DatabaseGeneratedOption.Computed)", schemaReference);
-            }
-            else if (IsPrimaryKey)
-            {
-                if (Settings.UseDataAnnotations)
-                    DataAnnotations.Add("DatabaseGenerated(DatabaseGeneratedOption.None)");
-                else
-                    databaseGeneratedOption = string.Format(".HasDatabaseGeneratedOption({0}DatabaseGeneratedOption.None)", schemaReference);
-            }
-
             var sb = new StringBuilder();
 
             if (Settings.UseDataAnnotations)
-                DataAnnotations.Add(string.Format("Column(@\"{0}\", Order = {1}, TypeName = \"{2}\")", Name, Ordinal, SqlPropertyType));
+                DataAnnotations.Add(string.Format("Column(@\"{0}\", TypeName = \"{1}\")", Name, SqlPropertyType));
             else
                 sb.AppendFormat(".HasColumnName(@\"{0}\").HasColumnType(\"{1}\")", Name, SqlPropertyType);
-
-            if (Settings.UseDataAnnotations && Indexes.Any())
-            {
-                foreach (var index in Indexes)
-                {
-                    DataAnnotations.Add(string.Format("Index(@\"{0}\", {1}, IsUnique = {2}, IsClustered = {3})",
-                        index.IndexName,
-                        index.KeyOrdinal,
-                        index.IsUnique ? "true" : "false",
-                        index.IsClustered ? "true" : "false"));
-                }
-            }
+            
+            // i don't want to use index
+            //if (Settings.UseDataAnnotations && Indexes.Any())
+            //{
+            //    foreach (var index in Indexes)
+            //    {
+            //        DataAnnotations.Add(string.Format("Index(@\"{0}\", {1}, IsUnique = {2}, IsClustered = {3})",
+            //            index.IndexName,
+            //            index.KeyOrdinal,
+            //            index.IsUnique ? "true" : "false",
+            //            index.IsClustered ? "true" : "false"));
+            //    }
+            //}
 
             if (IsNullable)
             {
@@ -187,17 +161,17 @@ namespace GeneratePOCO
             }
             else
             {
-                if (!IsComputed && (Settings.UseDataAnnotations || Settings.UseDataAnnotationsWithFluent))
-                {
-                    if (PropertyType.Equals("string", StringComparison.InvariantCultureIgnoreCase) && this.AllowEmptyStrings)
-                    {
-                        DataAnnotations.Add("Required(AllowEmptyStrings = true)");
-                    }
-                    else
-                    {
-                        DataAnnotations.Add("Required");
-                    }
-                }
+                //if (!IsComputed && (Settings.UseDataAnnotations || Settings.UseDataAnnotationsWithFluent))
+                //{
+                //    if (PropertyType.Equals("string", StringComparison.InvariantCultureIgnoreCase) && this.AllowEmptyStrings)
+                //    {
+                //        DataAnnotations.Add("Required(AllowEmptyStrings = true)");
+                //    }
+                //    else
+                //    {
+                //        DataAnnotations.Add("Required");
+                //    }
+                //}
 
                 if (!Settings.UseDataAnnotations)
                 {
@@ -219,35 +193,27 @@ namespace GeneratePOCO
 
             if (!IsMaxLength && MaxLength > 0)
             {
-                var doNotSpecifySize = (Settings.IsSqlCe && MaxLength > 4000); // Issue #179
 
-                if (Settings.UseDataAnnotations || Settings.UseDataAnnotationsWithFluent)
-                {
-                    DataAnnotations.Add(doNotSpecifySize ? "MaxLength" : string.Format("MaxLength({0})", MaxLength));
+                //if (Settings.UseDataAnnotations || Settings.UseDataAnnotationsWithFluent)
+                //{
+                //    DataAnnotations.Add( string.Format("MaxLength({0})", MaxLength));
 
-                    if (PropertyType.Equals("string", StringComparison.InvariantCultureIgnoreCase))
-                        DataAnnotations.Add(string.Format("StringLength({0})", MaxLength));
-                }
+                //    if (Settings.IsColumnAddMaxLentghAnnotation && PropertyType.Equals("string", StringComparison.InvariantCultureIgnoreCase))
+                //        DataAnnotations.Add(string.Format("StringLength({0})", MaxLength));
+                //}
 
                 if (!Settings.UseDataAnnotations)
                 {
-                    if (doNotSpecifySize)
-                    {
-                        sb.Append(".HasMaxLength(null)");
-                    }
-                    else
-                    {
-                        sb.AppendFormat(".HasMaxLength({0})", MaxLength);
-                    }
+                    sb.AppendFormat(".HasMaxLength({0})", MaxLength);
                 }
             }
 
             if (IsMaxLength)
             {
-                if (Settings.UseDataAnnotations || Settings.UseDataAnnotationsWithFluent)
-                {
-                    DataAnnotations.Add("MaxLength");
-                }
+                //if (Settings.UseDataAnnotations || Settings.UseDataAnnotationsWithFluent)
+                //{
+                //    DataAnnotations.Add("MaxLength");
+                //}
 
                 if (!Settings.UseDataAnnotations)
                 {
@@ -264,7 +230,9 @@ namespace GeneratePOCO
             if (IsRowVersion)
             {
                 if (Settings.UseDataAnnotations)
-                    DataAnnotations.Add("Timestamp");
+                {
+                    //DataAnnotations.Add("Timestamp");
+                }
                 else
                     sb.Append(".IsRowVersion()");
             }
@@ -275,27 +243,24 @@ namespace GeneratePOCO
                 // DataAnnotations.Add("????");
             }
 
-            if (databaseGeneratedOption != null)
-                sb.Append(databaseGeneratedOption);
-
             var config = sb.ToString();
             if (!string.IsNullOrEmpty(config))
                 Config = string.Format("Property(x => x.{0}){1};", NameHumanCase, config);
 
-            if (IsPrimaryKey && Settings.UseDataAnnotations)
-                DataAnnotations.Add("Key");
+            // No need to do this in my project
+            //if (IsPrimaryKey && Settings.UseDataAnnotations)
+            //    DataAnnotations.Add("Key");
 
-            string valueFromName, valueFromType;
-            if (Settings.ColumnNameToDataAnnotation.TryGetValue(NameHumanCase.ToLowerInvariant(), out valueFromName))
-            {
-                DataAnnotations.Add(valueFromName);
-            }
-            else if (Settings.ColumnTypeToDataAnnotation.TryGetValue(SqlPropertyType.ToLowerInvariant(), out valueFromType))
-            {
-                DataAnnotations.Add(valueFromType);
-            }
-
-            DataAnnotations.Add(string.Format("Display(Name = \"{0}\")", DisplayName));
+            //string valueFromName, valueFromType;
+            //if (Settings.ColumnNameToDataAnnotation.TryGetValue(NameHumanCase.ToLowerInvariant(), out valueFromName))
+            //{
+            //    DataAnnotations.Add(valueFromName);
+            //}
+            //else if (Settings.ColumnTypeToDataAnnotation.TryGetValue(SqlPropertyType.ToLowerInvariant(), out valueFromType))
+            //{
+            //    DataAnnotations.Add(valueFromType);
+            //}
+            
         }
 
         public void SetupEntityAndConfig()

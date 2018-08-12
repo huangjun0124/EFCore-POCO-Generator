@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\ClassOutputGenerater.cs" />
     <Compile Include="Utils\BaseClassMaker.cs" />
     <Compile Include="CheckBoxGrid\CheckBoxClickedHandler.cs" />
     <Compile Include="CheckBoxGrid\CommonGirdCheckBoxHeaderCell.cs" />
@@ -71,9 +72,11 @@
     </Compile>
     <Compile Include="Model\GeneratedTextTransformation.cs" />
     <Compile Include="Model\Index.cs" />
+    <Compile Include="Utils\DateTimeExtension.cs" />
     <Compile Include="Utils\Inflector.cs" />
     <Compile Include="Model\LambdaCollections.cs" />
-    <Compile Include="Utils\Outputer.cs" />
+    <Compile Include="Utils\IOutput.cs" />
+    <Compile Include="Utils\PathHelper.cs" />
     <Compile Include="Utils\Processer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -86,7 +89,7 @@
     <Compile Include="Model\Tables.cs" />
     <Compile Include="ToGenerate\TablesToGenerateConfig.cs" />
     <Compile Include="ToGenerate\TableViewToGenerate.cs" />
-    <Compile Include="Utils\Utils.cs" />
+    <Compile Include="Utils\SysConsole.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace NetCoreDbTest
+namespace NetCoreDbTest.Entity
 {
     [Table("MyTable")]
     public class MyTable

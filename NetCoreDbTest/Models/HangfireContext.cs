@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NetCoreDbTest.Entity;
 
 namespace NetCoreDbTest
 {

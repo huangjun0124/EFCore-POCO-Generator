@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GeneratePOCO
 {
-    [DebuggerDisplay("Name={Name} IsView={IsView}")]
+    [DebuggerDisplay("Name={Name} IsView={IsView} HasPrimaryKey={HasPrimaryKey}")]
     public class Table
     {
         public string Name;
@@ -294,7 +294,7 @@ namespace GeneratePOCO
                 m.ToTable(""{2}""{5});
                 m.MapLeftKey(""{3}"");
                 m.MapRightKey(""{4}"");
-            }});", leftPropName, rightPropName, left.FkTableName, left.FkColumn, right.FkColumn, Settings.IsSqlCe ? string.Empty : ", \"" + left.FkSchema + "\""));
+            }});", leftPropName, rightPropName, left.FkTableName, left.FkColumn, right.FkColumn,  ", \"" + left.FkSchema + "\""));
         }
 
         public void IdentifyMappingTable(List<ForeignKey> fkList, Tables tables, bool checkForFkNameClashes)
@@ -350,8 +350,7 @@ namespace GeneratePOCO
         public void SetupDataAnnotations()
         {
             var schema = String.Empty;
-            if (!Settings.IsSqlCe)
-                schema = String.Format(", Schema = \"{0}\"", Schema);
+            schema = String.Format(", Schema = \"{0}\"", Schema);
             DataAnnotations = new List<string>
             {
                 HasPrimaryKey

@@ -169,19 +169,7 @@ namespace GeneratePOCO
 
         public static readonly Func<StoredProcedure, string> WriteStoredProcReturnModelName = sp =>
         {
-            if (Settings.StoredProcedureReturnTypes.ContainsKey(sp.NameHumanCase))
-                return Settings.StoredProcedureReturnTypes[sp.NameHumanCase];
-            if (Settings.StoredProcedureReturnTypes.ContainsKey(sp.Name))
-                return Settings.StoredProcedureReturnTypes[sp.Name];
-
             var name = string.Format("{0}ReturnModel", sp.NameHumanCase);
-            if (Settings.StoredProcedureReturnModelRename != null)
-            {
-                var customName = Settings.StoredProcedureReturnModelRename(name, sp);
-                if (!string.IsNullOrEmpty(customName))
-                    name = customName;
-            }
-
             return name;
         };
 

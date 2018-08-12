@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using NetCoreDbTest.Entity;
 
 namespace NetCoreDbTest
 {
@@ -40,6 +41,11 @@ namespace NetCoreDbTest
                 context.SaveChanges();
                 var tas = context.MyTables.ToList();
             }
+
+            HangFire_AggregatedCounter ac = new HangFire_AggregatedCounter()
+            {
+                ExpireAt = DateTime.Now
+            };
         }
     }
 }

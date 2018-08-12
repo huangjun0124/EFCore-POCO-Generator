@@ -9,11 +9,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GeneratePOCO.Utils;
 
 namespace GeneratePOCO
 {
-    class Processer : GeneratedTextTransformation
+    class Processer
     {
+        public static IOutput Outputer;
 
         public void LoadAllTablesToSetting()
         {
@@ -35,62 +37,7 @@ namespace GeneratePOCO
             // Read schema
             var factory = GetDbProviderFactory();
             Settings.StoredProcs = LoadStoredProcs(factory);
-
-            // Generate output
-            if (Settings.Tables.Count > 0 || Settings.StoredProcs.Count > 0)
-            {
-            }
         }
-
-        public static readonly Func<string, string> ToDisplayName = (str) =>
-        {
-            if (string.IsNullOrEmpty(str))
-                return string.Empty;
-
-            var sb = new StringBuilder();
-            str = Regex.Replace(str, @"[^a-zA-Z0-9]", " "); // Anything that is not a letter or digit, convert to a space
-            str = Regex.Replace(str, @"[A-Z]{2,}", " $+ "); // Any word that is upper case
-
-            var hasUpperCased = false;
-            var lastChar = '\0';
-            foreach (var original in str.Trim())
-            {
-                var c = original;
-                if (lastChar == '\0')
-                {
-                    c = char.ToUpperInvariant(original);
-                }
-                else
-                {
-                    var isLetter = char.IsLetter(original);
-                    var isDigit = char.IsDigit(original);
-                    var isWhiteSpace = !isLetter && !isDigit;
-
-                    // Is this char is different to last time
-                    var isDifferent = false;
-                    if (isLetter && !char.IsLetter(lastChar))
-                        isDifferent = true;
-                    else if (isDigit && !char.IsDigit(lastChar))
-                        isDifferent = true;
-                    else if (char.IsUpper(original) && !char.IsUpper(lastChar))
-                        isDifferent = true;
-
-                    if (isDifferent || isWhiteSpace)
-                        sb.Append(' '); // Add a space
-
-                    if (hasUpperCased && isLetter)
-                        c = char.ToLowerInvariant(original);
-                }
-                lastChar = original;
-                if (!hasUpperCased && char.IsUpper(c))
-                    hasUpperCased = true;
-                sb.Append(c);
-            }
-            str = sb.ToString();
-            str = Regex.Replace(str, @"\s+", " ").Trim(); // Multiple white space to one space
-            str = Regex.Replace(str, @"\bid\b", "ID"); //  Make ID word uppercase
-            return str;
-        };
 
         public static void ArgumentNotNull<T>(T arg, string name) where T : class
         {
@@ -105,6 +52,7 @@ namespace GeneratePOCO
             return col.IsNullable && !CommonParams.NotNullable.Contains(col.PropertyType.ToLower());
         }
 
+        #region output message
         public static void WriteLine(string format, params object[] args)
         {
             WriteLine(string.Format(CultureInfo.CurrentCulture, format, args));
@@ -112,39 +60,16 @@ namespace GeneratePOCO
 
         public static void WriteLine(string message)
         {
-            Outputer.WriteLine(message);
+            Outputer.Log(message);
         }
 
-        public new void Warning(string message)
+        public void Warning(string message)
         {
-            Outputer.Log(string.Format(CultureInfo.CurrentCulture, "Warning: {0}", message));
+            Outputer.Log(string.Format(CultureInfo.CurrentCulture, "Warning: {0}", message), true);
         }
-        public new void Error(string message)
+        public void Error(string message)
         {
-            Outputer.Log(string.Format(CultureInfo.CurrentCulture, "Warning: {0}", message));
-        }
-        private object GetCOMService(IServiceProvider provider, Type type)
-        {
-            object result = provider.GetService(type);
-            if (result == null)
-            {
-                return result;
-            }
-            try
-            {
-                return System.Runtime.InteropServices.Marshal.GetObjectForIUnknown(
-                    System.Runtime.InteropServices.Marshal.GetIUnknownForObject(result));
-            }
-            catch (Exception)
-            {
-                return result;
-            }
-        }
-
-        private static string ZapPassword()
-        {
-            var rx = new Regex("password=[^\";]*", RegexOptions.Singleline | RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            return rx.Replace(Settings.ConnectionString, "password=**zapped**;");
+            Outputer.Log(string.Format(CultureInfo.CurrentCulture, "Warning: {0}", message), true);
         }
 
         public void PrintError(String message, Exception ex)
@@ -161,13 +86,8 @@ namespace GeneratePOCO
             String report = sb.ToString();
 
             Warning(message + " " + report);
-            WriteLine("");
-            WriteLine("// -----------------------------------------------------------------------------------------");
-            WriteLine("// " + message);
-            WriteLine("// -----------------------------------------------------------------------------------------");
-            WriteLine(report);
-            WriteLine("");
         }
+        #endregion
 
         private DbProviderFactory GetDbProviderFactory()
         {
@@ -194,13 +114,6 @@ namespace GeneratePOCO
             return null;
         }
 
-        private bool IsSqlCeConnection(DbConnection connection)
-        {
-            if (connection.GetType().Name.ToLower() == "sqlceconnection")
-                return true;
-            return false;
-        }
-
         private Tables LoadTables(DbProviderFactory factory)
         {
             if (factory == null || !(Settings.ElementsToGenerate.HasFlag(Elements.Poco) ||
@@ -219,12 +132,7 @@ namespace GeneratePOCO
                     conn.ConnectionString = Settings.ConnectionString;
                     conn.Open();
 
-                    Settings.IsSqlCe = IsSqlCeConnection(conn);
-
-                    if (Settings.IsSqlCe)
-                        Settings.PrependSchemaName = false;
-
-                    var reader = new SqlServerSchemaReader(conn, factory) { Outer = this };
+                    var reader = new SqlServerSchemaReader(conn, factory);
                     var tables = reader.ReadSchema();
                     var fkList = reader.ReadForeignKeys();
                     reader.IdentifyForeignKeys(fkList, tables);
@@ -236,24 +144,25 @@ namespace GeneratePOCO
                         t.Suffix = Settings.TableSuffix;
                     }
 
-                    if (Settings.AddForeignKeys != null) Settings.AddForeignKeys(fkList, tables);
+                    Settings.AddForeignKeys?.Invoke(fkList, tables);
 
                     // Work out if there are any foreign key relationship naming clashes
                     reader.ProcessForeignKeys(fkList, tables, true);
-                    if (Settings.UseMappingTables)
-                        tables.IdentifyMappingTables(fkList, true);
+                    
+                    tables.IdentifyMappingTables(fkList, Settings.UseMappingTables);
 
                     // Now we know our foreign key relationships and have worked out if there are any name clashes,
                     // re-map again with intelligently named relationships.
                     tables.ResetNavigationProperties();
 
                     reader.ProcessForeignKeys(fkList, tables, false);
-                    if (Settings.UseMappingTables)
-                        tables.IdentifyMappingTables(fkList, false);
+                    
+                    tables.IdentifyMappingTables(fkList, !Settings.UseMappingTables);
 
                     conn.Close();
                     return tables;
                 }
+                
             }
             catch (Exception x)
             {
@@ -330,33 +239,10 @@ namespace GeneratePOCO
                     conn.ConnectionString = Settings.ConnectionString;
                     conn.Open();
 
-                    if (Settings.IsSqlCe)
-                        return new List<StoredProcedure>();
-
-                    var reader = new SqlServerSchemaReader(conn, factory) { Outer = this };
+                    var reader = new SqlServerSchemaReader(conn, factory);
                     var storedProcs = reader.ReadStoredProcs();
                     conn.Close();
-
-                    // Remove unrequired stored procs
-                    for (int i = storedProcs.Count - 1; i >= 0; i--)
-                    {
-                        if (Settings.SchemaFilterInclude != null && !Settings.SchemaFilterInclude.IsMatch(storedProcs[i].Schema))
-                        {
-                            storedProcs.RemoveAt(i);
-                            continue;
-                        }
-                        if (Settings.StoredProcedureFilterInclude != null && !Settings.StoredProcedureFilterInclude.IsMatch(storedProcs[i].Name))
-                        {
-                            storedProcs.RemoveAt(i);
-                            continue;
-                        }
-                        if (!Settings.StoredProcedureFilter(storedProcs[i]))
-                        {
-                            storedProcs.RemoveAt(i);
-                            continue;
-                        }
-                    }
-
+                    
                     using (var sqlConnection = new SqlConnection(Settings.ConnectionString))
                     {
                         foreach (var proc in storedProcs)

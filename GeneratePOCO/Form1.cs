@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GeneratePOCO.Utils;
 
 namespace GeneratePOCO
 {
-    public partial class Form1 : Form
+    public partial class Form1 : Form, IOutput
     {
         private const string COL_TABLENAME = "TableName";
         private const string COL_TYPE = "Type";
@@ -27,11 +31,24 @@ namespace GeneratePOCO
             InitializeComponent();
         }
 
+        public static void InitConnectionString()
+        {
+            if (!string.IsNullOrEmpty(Settings.ConnectionString))
+                return;
+            var section = ConfigurationManager.ConnectionStrings[Settings.ConnectionStringName];
+            Settings.ProviderName = section.ProviderName;
+            Settings.ConnectionString = section.ConnectionString;
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
-            Utils.InitConnectionString();
+            Processer.Outputer = this;
+            InitConnectionString();
             txtConnectionString.Text = Settings.ConnectionString;
             LoadTables();
+            txtContextTemplate.Text = PathHelper.GetActualPath(Settings.DbContextTemplateFile);
+            txtPOCOTemplate.Text = PathHelper.GetActualPath(Settings.POCOClassTemplateFile);
+            Log("Load Message from database success!");
         }
 
         private void LoadTables()
@@ -39,6 +56,7 @@ namespace GeneratePOCO
             var config = TablesToGenerateConfig.TableNamesConfig;
             Processer pro = new Processer();
             pro.LoadAllTablesToSetting();
+            // pro.LoadAllProcedures();
 
             DataTable dtTo = new DataTable();
             dtTo.Columns.Add(COL_TABLENAME);
@@ -104,12 +122,36 @@ namespace GeneratePOCO
             }
         }
 
-        private void btnGenerate_Click(object sender, EventArgs e)
+        public void Log(string message, bool isWarn = false)
         {
-            
-
+            if (txtMessage.InvokeRequired)
+            {
+                txtMessage.Invoke(new MethodInvoker(() => { Log(message, isWarn); }));
+            }
+            else
+            {
+                string str = string.Format("{0}：{1}\n", DateTime.Now.ToAllInfoString(), message);
+                int txtLen = txtMessage.TextLength>0?txtMessage.TextLength - 1:0;
+                txtMessage.AppendText(str);
+                txtMessage.SelectionStart = txtLen;
+                txtMessage.SelectionLength = str.Length;
+                if (isWarn)
+                {
+                    txtMessage.SelectionColor = Color.Red;
+                }
+                else
+                {
+                    txtMessage.SelectionColor = Color.Green;
+                }
+            }
         }
 
-       
+        private void btnGenerate_Click(object sender, EventArgs e)
+        {
+            ClassOutputGenerater generater = new ClassOutputGenerater();
+            generater.WriteToFiles();
+        }
+
+        
     }
 }

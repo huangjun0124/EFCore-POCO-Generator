@@ -29,22 +29,6 @@ namespace GeneratePOCO
         public abstract void IdentifyForeignKeys(List<ForeignKey> fkList, Tables tables);
         public abstract void ReadIndexes(Tables tables);
         public abstract void ReadExtendedProperties(Tables tables, bool commentsInSummaryBlock);
-
-        protected void WriteLine(string o)
-        {
-            Outputer.WriteLine(o);
-        }
-
-        protected bool IsFilterExcluded(Regex filterExclude, Regex filterInclude, string name)
-        {
-            if (filterExclude != null && filterExclude.IsMatch(name))
-                return true;
-            if (filterInclude != null && !filterInclude.IsMatch(name))
-                return true;
-            if (name.Contains('.'))    // EF does not allow tables to contain a period character
-                return true;
-            return false;
-        }
     }
 
     class SqlServerSchemaReader : SchemaReader
@@ -981,15 +965,12 @@ WHERE   t.is_ms_shipped = 0
 
         private static string IncludeQueryTraceOn9481()
         {
-            if (Settings.IncludeQueryTraceOn9481Flag)
-                return @"
-OPTION (QUERYTRACEON 9481)";
             return string.Empty;
         }
 
         private void ReadDatabaseEdition()
         {
-            if (Settings.IsSqlCe || !string.IsNullOrEmpty(_sqlDatabaseEdition))
+            if (!string.IsNullOrEmpty(_sqlDatabaseEdition))
                 return;
 
             if (Cmd == null)
@@ -1028,21 +1009,8 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
 
         private String GetReadSchemaSql()
         {
-            if (Settings.IsSqlCe)
-            {
-                return TableSQLCE;
-            }
-
             String sql;
-            if (Settings.IncludeSynonyms)
-            {
-                sql = SynonymTableSQLSetup + TableSQL + SynonymTableSQL + IncludeQueryTraceOn9481();
-            }
-            else
-            {
-                sql = TableSQL + IncludeQueryTraceOn9481();
-            }
-
+            sql = TableSQL + IncludeQueryTraceOn9481();
             ReadDatabaseEdition();
             var temporalTableSupport = _sqlDatabaseProductMajorVersion >= 13;
             if (!temporalTableSupport)
@@ -1081,13 +1049,19 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                 str = sb.ToString();
 
             // Remove non alphanumerics
-            str = Utils.RxCleanUp.Replace(str, "");
+            str = RxCleanUp.Replace(str, "");
             if (char.IsDigit(str[0]))
                 str = "C" + str;
 
             return str;
         };
 
+        public static readonly Regex RxCleanUp = new Regex(@"[^\w\d\s_-]", RegexOptions.Compiled);
+
+        /// <summary>
+        /// get Tables and Columns in db
+        /// </summary>
+        /// <returns></returns>
         public override Tables ReadSchema()
         {
             ReadDatabaseEdition();
@@ -1098,7 +1072,7 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
 
             Cmd.CommandText = this.GetReadSchemaSql();
 
-            if (!Settings.IsSqlCe) Cmd.CommandTimeout = Settings.CommandTimeout;
+            Cmd.CommandTimeout = Settings.CommandTimeout;
 
             using (var rdr = Cmd.ExecuteReader())
             {
@@ -1108,13 +1082,7 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                 while (rdr.Read())
                 {
                     string schema = rdr["SchemaName"].ToString().Trim();
-                    if (IsFilterExcluded(Settings.SchemaFilterExclude, Settings.SchemaFilterInclude, schema))
-                        continue;
-
                     string tableName = rdr["TableName"].ToString().Trim();
-                    if (IsFilterExcluded(Settings.TableFilterExclude, Settings.TableFilterInclude, tableName))
-                        continue;
-
                     if (lastTable != tableName || table == null)
                     {
                         // The data from the database is not sorted
@@ -1136,15 +1104,11 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                                 HasNullableColumns = false
                             };
 
-                            if (!Settings.IncludeViews && table.IsView)
-                                continue;
-
                             tableName = Settings.TableRename(tableName, schema, table.IsView);
-                            if (IsFilterExcluded(Settings.TableFilterExclude, null, tableName)) // Retest exclusion filter after table rename
-                                continue;
-
+                           
                             // Handle table names with underscores - singularise just the last word
                             table.ClassName = Inflector.MakeSingular(CleanUp(tableName));
+
                             var titleCase = (Settings.UsePascalCase ? Inflector.ToTitleCase(table.ClassName) : table.ClassName).Replace(" ", "").Replace("$", "").Replace(".", "");
                             table.NameHumanCase = titleCase;
 
@@ -1161,7 +1125,7 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                         }
                     }
 
-                    var col = CreateColumn(rdr, rxClean, table, Settings.ColumnFilterExclude);
+                    var col = CreateColumn(rdr, rxClean, table);
                     if (col != null)
                         table.Columns.Add(col);
                 }
@@ -1202,9 +1166,6 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                 return fkList;
 
             Cmd.CommandText = ForeignKeySQL + IncludeQueryTraceOn9481();
-
-            if (Settings.IncludeSynonyms)
-                Cmd.CommandText = SynonymForeignKeySQLSetup + ForeignKeySQL + SynonymForeignKeySQL + IncludeQueryTraceOn9481();
 
             if (Cmd.GetType().Name == "SqlCeCommand")
                 Cmd.CommandText = ForeignKeySQLCE;
@@ -1416,8 +1377,6 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
 
             if (IsAzure())
                 Cmd.CommandText = StoredProcedureSQLAzure + IncludeQueryTraceOn9481();
-            else if (Settings.IncludeSynonyms)
-                Cmd.CommandText = SynonymStoredProcedureSQLSetup + StoredProcedureSQL + SynonymStoredProcedureSQL + IncludeQueryTraceOn9481();
             else
                 Cmd.CommandText = StoredProcedureSQL + IncludeQueryTraceOn9481();
 
@@ -1435,14 +1394,10 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                         continue;
 
                     string schema = rdr["SPECIFIC_SCHEMA"].ToString().Trim();
-                    if (Settings.SchemaFilterExclude != null && Settings.SchemaFilterExclude.IsMatch(schema))
-                        continue;
-
+                   
                     string spName = rdr["SPECIFIC_NAME"].ToString().Trim();
                     var fullname = schema + "." + spName;
-                    if (Settings.StoredProcedureFilterExclude != null && (Settings.StoredProcedureFilterExclude.IsMatch(spName) || Settings.StoredProcedureFilterExclude.IsMatch(fullname)))
-                        continue;
-
+                   
                     if (lastSp != fullname || sp == null)
                     {
                         lastSp = fullname;
@@ -1458,8 +1413,6 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                             sp.NameHumanCase = schema + "_" + sp.NameHumanCase;
 
                         sp.NameHumanCase = Settings.StoredProcedureRename(sp);
-                        if (Settings.StoredProcedureFilterExclude != null && (Settings.StoredProcedureFilterExclude.IsMatch(sp.NameHumanCase) || Settings.StoredProcedureFilterExclude.IsMatch(schema + "." + sp.NameHumanCase)))
-                            continue;
 
                         result.Add(sp);
                     }
@@ -1783,7 +1736,7 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
             }
         }
 
-        private static Column CreateColumn(IDataRecord rdr, Regex rxClean, Table table, Regex columnFilterExclude)
+        private static Column CreateColumn(IDataRecord rdr, Regex rxClean, Table table)
         {
             if (rdr == null)
                 throw new ArgumentNullException("rdr");
@@ -1828,18 +1781,23 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                 ParentTable = table
             };
 
-            if (col.MaxLength == -1 && (col.SqlPropertyType.EndsWith("varchar", StringComparison.InvariantCultureIgnoreCase) || col.SqlPropertyType.EndsWith("varbinary", StringComparison.InvariantCultureIgnoreCase)))
-                col.SqlPropertyType += "(max)";
+            if (col.PropertyType == "string")
+            {
+                if (col.MaxLength == -1)
+                {
+                    col.SqlPropertyType += "(max)";
+                }
+                else
+                {
+                    col.SqlPropertyType += $"({col.MaxLength})";
+                }
+            }
 
             if (col.IsPrimaryKey && !col.IsIdentity && col.IsStoreGenerated && typename == "uniqueidentifier")
             {
                 col.IsStoreGenerated = false;
                 col.IsIdentity = true;
             }
-
-            var fullName = string.Format("{0}.{1}.{2}", table.Schema, table.Name, col.Name);
-            if (columnFilterExclude != null && !col.IsPrimaryKey && (columnFilterExclude.IsMatch(col.Name) || columnFilterExclude.IsMatch(fullName)))
-                col.Hidden = true;
 
             col.IsFixedLength = (typename == "char" || typename == "nchar");
             col.IsUnicode = !(typename == "char" || typename == "varchar" || typename == "text");
@@ -1858,8 +1816,6 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
 
             if (CommonParams.ReservedKeywords.Contains(col.NameHumanCase))
                 col.NameHumanCase = "@" + col.NameHumanCase;
-
-            col.DisplayName = Processer.ToDisplayName(col.Name);
 
             var titleCase = (Settings.UsePascalCase ? Inflector.ToTitleCase(col.NameHumanCase) : col.NameHumanCase).Replace(" ", "");
             if (titleCase != string.Empty)

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace NetCoreDbTest
+namespace NetCoreDbTest.Entity
 {
     [Table("Job",Schema = "HangFire")]
     public class JobClass

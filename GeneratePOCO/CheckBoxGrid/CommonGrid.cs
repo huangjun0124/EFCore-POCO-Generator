@@ -204,19 +204,17 @@ namespace GeneratePOCO
                 {
                     return;
                 }
-                else if ((!this.AutoCheckBox ? false : this.CheckBoxSyncSelectedRows))
+                else if (this.AutoCheckBox && this.CheckBoxSyncSelectedRows)
                 {
-                    if ((e.RowIndex <= -1 ? false : e.ColumnIndex > -1))
+                    if (e.RowIndex > -1 && e.ColumnIndex > -1)
                     {
                         this._mouseUpInCell = true;
                         if (!(base.Rows[e.RowIndex].Cells[e.ColumnIndex].ValueType == typeof(bool)))
                         {
-                            this.SyncCheckBoxWithSelection();
+                            base.Rows[e.RowIndex].Cells["CheckBoxColumn"].Value = Rows[e.RowIndex].Selected;
+                            //this.SyncCheckBoxWithSelection();
                         }
-                        else
-                        {
-                            this.SyncSelectionWithCheckBox();
-                        }
+                        this.SyncSelectionWithCheckBox();
                     }
                 }
             }
@@ -244,9 +242,9 @@ namespace GeneratePOCO
                 {
                     return;
                 }
-                else if ((this._mouseUpInCell || !this.AutoCheckBox ? false : this.CheckBoxSyncSelectedRows))
+                else if ((!this._mouseUpInCell && this.AutoCheckBox && this.CheckBoxSyncSelectedRows))
                 {
-                    if ((base.Rows.Count <= 0 ? false : base.Columns.Count > 0))
+                    if ((base.Rows.Count > 0 && base.Columns.Count > 0))
                     {
                         this.SyncCheckBoxWithSelection();
                     }
@@ -264,7 +262,7 @@ namespace GeneratePOCO
             try
             {
                 this._inSorting = true;
-                if ((!this.AutoCheckBox || !this.CheckBoxSyncSelectedRows ? false : base.Rows.Count > 0))
+                if ((this.AutoCheckBox && this.CheckBoxSyncSelectedRows && base.Rows.Count > 0))
                 {
                     this.SyncSelectionWithCheckBox();
                 }
@@ -369,9 +367,9 @@ namespace GeneratePOCO
         public void SyncCheckBoxWithSelection()
         {
             base.SuspendLayout();
-            if ((!this.AutoCheckBox ? false : this.CheckBoxSyncSelectedRows))
+            if ((this.AutoCheckBox && this.CheckBoxSyncSelectedRows))
             {
-                foreach (DataGridViewRow row in (IEnumerable)base.Rows)
+                foreach (DataGridViewRow row in base.Rows)
                 {
                     row.Cells["CheckBoxColumn"].Value = row.Selected;
                 }
@@ -382,9 +380,9 @@ namespace GeneratePOCO
         public void SyncSelectionWithCheckBox()
         {
             base.SuspendLayout();
-            if ((!this.AutoCheckBox ? false : this.CheckBoxSyncSelectedRows))
+            if ((this.AutoCheckBox && this.CheckBoxSyncSelectedRows))
             {
-                foreach (DataGridViewRow row in (IEnumerable)base.Rows)
+                foreach (DataGridViewRow row in base.Rows)
                 {
                     row.Selected = (bool)row.Cells["CheckBoxColumn"].Value;
                 }

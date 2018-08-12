@@ -35,5 +35,14 @@ namespace GeneratePOCO
                 return config;
             }
         }
+
+        public static void SaveConfig()
+        {
+            if (config != null)
+            {
+                var strToWrite = JsonConvert.SerializeObject(config);
+                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TablesToGenerate.json"), strToWrite);
+            }
+        }
     }
 }
