@@ -60,21 +60,13 @@ namespace GeneratePOCO
 
             DataTable dtTo = new DataTable();
             dtTo.Columns.Add(COL_TABLENAME);
-            dtTo.Columns.Add(COL_IsView);
             foreach (var c in config.tables)
             {
                 var row = dtTo.NewRow();
                 row[COL_TABLENAME] = c;
-                row[COL_IsView] = Resource.GetString("false");
                 dtTo.Rows.Add(row);
             }
-            foreach (var c in config.views)
-            {
-                var row = dtTo.NewRow();
-                row[COL_TABLENAME] = c;
-                row[COL_TYPE] = Resource.GetString("true");
-                dtTo.Rows.Add(row);
-            }
+
             grdTo.DataSource = dtTo;
 
             DataTable dtAll = new DataTable();
@@ -109,14 +101,13 @@ namespace GeneratePOCO
             var config = TablesToGenerateConfig.TableNamesConfig;
             foreach (DataGridViewRow row in grdAll.Rows)
             {
-                if ((bool) row.Cells[0].Value && !config.TableHashSet.Contains(row.Cells[COL_TABLENAME].Value.ToString()))
+                if ((bool) row.Cells[0].Value && !TablesToGenerateConfig.TableHashSet.Contains(row.Cells[COL_TABLENAME].Value.ToString()))
                 {
                     config.tables.Add(row.Cells[COL_TABLENAME].Value.ToString());
-                    config.TableHashSet.Add(row.Cells[COL_TABLENAME].Value.ToString());
+                    TablesToGenerateConfig.TableHashSet.Add(row.Cells[COL_TABLENAME].Value.ToString());
                     var dtTo = grdTo.DataSource as DataTable;
                     var rowNew = dtTo.NewRow();
                     rowNew[COL_TABLENAME] = row.Cells[COL_TABLENAME].Value.ToString();
-                    rowNew[COL_IsView] = Resource.GetString(row.Cells[COL_IsView].Value.ToString().ToLower());
                     dtTo.Rows.Add(rowNew);
                 }
             }

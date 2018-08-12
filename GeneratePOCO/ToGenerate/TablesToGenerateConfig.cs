@@ -11,6 +11,7 @@ namespace GeneratePOCO
     class TablesToGenerateConfig
     {
         private static TableViewToGenerate config;
+        public static HashSet<string> TableHashSet { get; set; }
 
         public static TableViewToGenerate TableNamesConfig
         {
@@ -22,12 +23,12 @@ namespace GeneratePOCO
                     {
                         JsonSerializer serializer = new JsonSerializer();
                         config = (TableViewToGenerate)serializer.Deserialize(file, typeof(TableViewToGenerate));
-                        config.TableHashSet = new HashSet<string>();
+                        TableHashSet = new HashSet<string>();
                         foreach (var table in config.tables)
                         {
-                            if (!config.TableHashSet.Contains(table))
+                            if (!TableHashSet.Contains(table))
                             {
-                                config.TableHashSet.Add(table);
+                                TableHashSet.Add(table);
                             }
                         }
                     }

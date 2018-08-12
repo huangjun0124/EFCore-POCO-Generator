@@ -6,7 +6,7 @@ namespace NetCoreDbTest
     public class HangfireContext : DbContext
     {{
 		#region DbSet fields definition
-        {0}
+{0}
 		#endregion
 
         public HangfireContext(DbContextOptions<HangfireContext> options)
@@ -17,7 +17,7 @@ namespace NetCoreDbTest
         {{
             base.OnModelCreating(modelBuilder);
 			#region Entity HasKey Mapping
-            {1}
+{1}
 			#endregion
         }}
     }}

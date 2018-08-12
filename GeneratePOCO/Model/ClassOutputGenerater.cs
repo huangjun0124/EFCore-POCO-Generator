@@ -42,7 +42,7 @@ namespace GeneratePOCO
             StringBuilder strModelBind = new StringBuilder();
             foreach (var table in Settings.Tables)
             {
-                if (TablesToGenerateConfig.TableNamesConfig.TableHashSet.Contains(table.Name) && table.HasPrimaryKey)
+                if (TablesToGenerateConfig.TableHashSet.Contains(table.Name) && table.HasPrimaryKey)
                 {
                     strDbSet.AppendLine(string.Format("\t\tpublic DbSet<{0}> {1} {{ get; set; }}", table.NameHumanCaseWithSuffix(),
                         Inflector.MakePlural(table.NameHumanCase)));
@@ -71,7 +71,7 @@ namespace GeneratePOCO
             }
             foreach (var table in Settings.Tables)
             {
-                if (TablesToGenerateConfig.TableNamesConfig.TableHashSet.Contains(table.Name))
+                if (TablesToGenerateConfig.TableHashSet.Contains(table.Name))
                 {
                     var clsName = table.NameHumanCaseWithSuffix();
                     outPuter.Log($"Begin to generate table class 【{clsName}】 ");
