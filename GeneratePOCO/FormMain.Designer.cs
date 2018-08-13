@@ -131,7 +131,8 @@
             this.txtFilterAll.Name = "txtFilterAll";
             this.txtFilterAll.Size = new System.Drawing.Size(311, 23);
             this.txtFilterAll.TabIndex = 2;
-            this.txtFilterAll.Visible = false;
+            this.txtFilterAll.TextChanged += new System.EventHandler(this.txtFilterAll_TextChanged);
+            this.txtFilterAll.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.txtFilterAll_MouseDoubleClick);
             // 
             // label2
             // 
@@ -143,7 +144,6 @@
             this.label2.TabIndex = 1;
             this.label2.Text = "Filter:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label2.Visible = false;
             // 
             // groupBox2
             // 
@@ -169,7 +169,7 @@
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 423F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 417F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(370, 417);
             this.tableLayoutPanel2.TabIndex = 4;
             // 
@@ -317,6 +317,7 @@
             this.grdAll.Size = new System.Drawing.Size(546, 382);
             this.grdAll.Sortable = true;
             this.grdAll.TabIndex = 3;
+            this.grdAll.DataSourceChanged += new System.EventHandler(this.grdAll_DataSourceChanged);
             // 
             // grdTo
             // 
@@ -360,14 +361,14 @@
             this.grdTo.Sortable = true;
             this.grdTo.TabIndex = 3;
             // 
-            // Form1
+            // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1064, 651);
             this.Controls.Add(this.tableLayoutPanel3);
             this.Controls.Add(this.panel1);
-            this.Name = "Form1";
+            this.Name = "FormMain";
             this.Text = "POCO Generater";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);

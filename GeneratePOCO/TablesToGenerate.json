@@ -1,7 +1,22 @@
-﻿{
+{
   "tables": [
-    "Job",
+    "AggregatedCounter",
+    "Counter",
+    "FakerPK",
     "Hash",
-    "List"
+    "Job",
+    "JobParameter",
+    "JobParamView",
+    "JobQueue",
+    "List",
+    "MyTable",
+    "Schema",
+    "Server",
+    "Set",
+    "State",
+    "testtypenotnull",
+    "testtypenull",
+    "View2",
+    "YourTable"
   ]
 }

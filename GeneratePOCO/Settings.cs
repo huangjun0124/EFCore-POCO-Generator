@@ -16,7 +16,7 @@ namespace GeneratePOCO
         // Settings.ProviderName = "System.Data.SqlClient";
 
         // Database settings
-        public static string ConnectionStringName = "HangfireReadOnly";
+        public static string ConnectionStringName;
         public static string ConnectionString; //= ConfigurationManager.ConnectionStrings["HangfireDbContext"].ConnectionString;
         public static string ProviderName; //= ConfigurationManager.ConnectionStrings["HangfireDbContext"].ProviderName;
         public static int CommandTimeout = 600;
@@ -27,12 +27,17 @@ namespace GeneratePOCO
         /// <summary>
         /// 生成的 POCO 实体类的模板文件地址
         /// </summary>
-        public static string POCOClassTemplateFile = @"..\..\..\NetCoreDbTest\Models\Entity\EntityClass.template";
+        public static string POCOClassTemplateFile;
 
         /// <summary>
         ///  生成 DbContext 类的模板文件地址-- net core does not need to update this when adding files to project
         /// </summary>
-        public static string DbContextTemplateFile= @"..\..\..\NetCoreDbTest\Models\HangfireContext.template";
+        public static string DbContextTemplateFile;
+
+        /// <summary>
+        /// TablesToGenerate.json 文件路径
+        /// </summary>
+        public static string TablesToGenerateFile;
 
         public static string CollectionInterfaceType = "System.Collections.Generic.ICollection";
         public static string CollectionType = "System.Collections.Generic.List";
@@ -51,13 +56,6 @@ namespace GeneratePOCO
         /// If true, then non-Entity Framework-specific DataAnnotations (like [Required] and [StringLength]) will be applied to Entities even if UseDataAnnotations is false.
         /// </summary>
         public static bool UseDataAnnotationsWithFluent = true;
-
-        public static string EntityClassesModifiers = "public partial";
-        public static string ResultClassModifiers = "public partial";
-        public static bool EntityClassesArePartial()
-        {
-            return EntityClassesModifiers != null && EntityClassesModifiers.Contains("partial");
-        }
 
         #endregion
 
@@ -78,6 +76,7 @@ namespace GeneratePOCO
         public static List<StoredProcedure> StoredProcs;
 
         #endregion
+
         /// <summary>
         /// Removes POCO constructor and instead uses C# 6 property initialisers to set defaults
         /// </summary>

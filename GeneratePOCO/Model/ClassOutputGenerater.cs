@@ -18,7 +18,15 @@ namespace GeneratePOCO
 
         public void WriteToFiles()
         {
-            Task.Run(async () => { await WriteToFilesAsync(); }).GetAwaiter().GetResult();
+            try
+            {
+                Task.Run(async () => { await WriteToFilesAsync(); }).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+               outPuter.Log(e.Message, true);
+            }
+            
         }
 
         private async Task WriteToFilesAsync()

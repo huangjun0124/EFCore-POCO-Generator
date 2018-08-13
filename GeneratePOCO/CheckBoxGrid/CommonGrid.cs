@@ -320,7 +320,7 @@ namespace GeneratePOCO
             if (base.DataSource != null)
             {
                 DataTable dataSource = base.DataSource as DataTable;
-                if ((!this.AutoCheckBox ? false : !dataSource.Columns.Contains("CheckBoxColumn")))
+                if ((this.AutoCheckBox && !dataSource.Columns.Contains("CheckBoxColumn")))
                 {
                     DataColumn dataColumn = new DataColumn("CheckBoxColumn", typeof(bool))
                     {

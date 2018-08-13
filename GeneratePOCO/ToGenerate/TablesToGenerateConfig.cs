@@ -19,7 +19,7 @@ namespace GeneratePOCO
             {
                 if (config == null)
                 {
-                    using (StreamReader file = File.OpenText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TablesToGenerate.json")))
+                    using (StreamReader file = File.OpenText(Settings.TablesToGenerateFile))
                     {
                         JsonSerializer serializer = new JsonSerializer();
                         config = (TableViewToGenerate)serializer.Deserialize(file, typeof(TableViewToGenerate));
@@ -41,8 +41,9 @@ namespace GeneratePOCO
         {
             if (config != null)
             {
-                var strToWrite = JsonConvert.SerializeObject(config);
-                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TablesToGenerate.json"), strToWrite);
+                config.tables.Sort();
+                var strToWrite = JsonConvert.SerializeObject(config, Formatting.Indented);
+                File.WriteAllText(Settings.TablesToGenerateFile, strToWrite);
             }
         }
     }

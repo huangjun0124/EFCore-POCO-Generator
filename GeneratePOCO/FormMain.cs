@@ -18,7 +18,6 @@ namespace GeneratePOCO
     public partial class FormMain : Form, IOutput
     {
         private const string COL_TABLENAME = "TableName";
-        private const string COL_TYPE = "Type";
         private const string COL_NameHumanCase = "NameHumanCase";
         private const string COL_Schema = "Schema";
         private const string COL_ClassName = "ClassName";
@@ -31,26 +30,28 @@ namespace GeneratePOCO
             InitializeComponent();
         }
 
-        public static void InitConnectionString()
+        public static void InitConfigSettings()
         {
-            if (!string.IsNullOrEmpty(Settings.ConnectionString))
-                return;
+            Settings.ConnectionStringName = ConfigurationManager.AppSettings["ConnectionStringName"];
             var section = ConfigurationManager.ConnectionStrings[Settings.ConnectionStringName];
             Settings.ProviderName = section.ProviderName;
             Settings.ConnectionString = section.ConnectionString;
+            Settings.POCOClassTemplateFile = ConfigurationManager.AppSettings["POCOClassTemplateFile"];
+            Settings.DbContextTemplateFile = ConfigurationManager.AppSettings["DbContextTemplateFile"];
+            Settings.TablesToGenerateFile = ConfigurationManager.AppSettings["TablesToGenerateConfigFilePath"];
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             Processer.Outputer = this;
-            InitConnectionString();
+            InitConfigSettings();
             txtConnectionString.Text = Settings.ConnectionString;
             LoadTables();
             txtContextTemplate.Text = PathHelper.GetActualPath(Settings.DbContextTemplateFile);
             txtPOCOTemplate.Text = PathHelper.GetActualPath(Settings.POCOClassTemplateFile);
             Log("Load Message from database success!");
         }
-
+        
         private void LoadTables()
         {
             var config = TablesToGenerateConfig.TableNamesConfig;
@@ -90,10 +91,6 @@ namespace GeneratePOCO
                 dtAll.Rows.Add(row);
             }
             grdAll.DataSource = dtAll;
-            for (int i = 1; i < grdAll.ColumnCount; i++)
-            {
-                grdAll.Columns[i].ReadOnly = true;
-            }
         }
 
         private void btnAddToGenerate_Click(object sender, EventArgs e)
@@ -145,6 +142,23 @@ namespace GeneratePOCO
             MessageBox.Show("Generate Context and Model class success!", "POCO");
         }
 
-        
+        private void txtFilterAll_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            txtFilterAll.SelectAll();
+        }
+
+        private void txtFilterAll_TextChanged(object sender, EventArgs e)
+        {
+           (grdAll.DataSource as DataTable).DefaultView.RowFilter = $"TableName like '%{txtFilterAll.Text}%'";
+        }
+
+        private void grdAll_DataSourceChanged(object sender, EventArgs e)
+        {
+            if(grdAll.DataSource == null) return;
+            for (int i = 1; i < grdAll.ColumnCount; i++)
+            {
+                grdAll.Columns[i].ReadOnly = true;
+            }
+        }
     }
 }
